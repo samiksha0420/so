@@ -43,7 +43,7 @@ if __name__ == "__main__":
     display(process_list)
 
 
-
+*******************************************
 **np-sjf**
 class process:
     def __init__(self, pid, arrival_time, burst_time):
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     fcfs(process_list)
     display(process_list)
 
-
+************************************
 **p-sjf**
 class process:
     def __init__ (self, pid, at, bt):
@@ -148,7 +148,7 @@ if __name__ == "__main__":
 
 
 
-
+*************************
 
 **ps**
 class process:
@@ -202,8 +202,8 @@ if __name__ == "__main__":
      display(process_list)
 
 
-
-     **rr**
+************************
+     **rr****
      class process:
     def __init__ (self, pid, at, bt):
         self.pid = pid
@@ -271,4 +271,178 @@ if __name__ == "__main__":
     display(process_list)
 
 
+
+**********************************
+**prducer-consumer**
+
+import threading
+import time
+import random
+
+# Shared buffer
+buffer = []
+buffer_size = 5
+
+# Semaphores
+empty_slots = threading.Semaphore(buffer_size)  # initially all slots are empty
+full_slots = threading.Semaphore(0)             # initially no filled slot
+
+# Mutex lock
+mutex = threading.Lock()
+
+# Producer thread function
+def producer():
+    for i in range(10):
+        item = random.randint(1, 100)
+        empty_slots.acquire()         # wait if buffer is full
+        mutex.acquire()              # acquire lock to access buffer
+        buffer.append(item)
+        print(f"Producer produced: {item}")
+        mutex.release()              # release lock
+        full_slots.release()        # signal that a new item is available
+        time.sleep(random.random()) # simulate work
+
+# Consumer thread function
+def consumer():
+    for i in range(10):
+        full_slots.acquire()         # wait if buffer is empty
+        mutex.acquire()              # acquire lock
+        item = buffer.pop(0)
+        print(f"Consumer consumed: {item}")
+        mutex.release()              # release lock
+        empty_slots.release()       # signal that a slot is now empty
+        time.sleep(random.random()) # simulate work
+
+# Main function
+if __name__ == "__main__":
+    # Create threads
+    producer_thread = threading.Thread(target=producer)
+    consumer_thread = threading.Thread(target=consumer)
+
+    # Start threads
+    producer_thread.start()
+    consumer_thread.start()
+
+    # Wait for threads to finish
+    producer_thread.join()
+    consumer_thread.join()
+
+    print("Finished Producer-Consumer simulation.")
+
+
+
+*************************
+**thread-management**
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+
+#define MAX 10
+
+int mat1[MAX][MAX], mat2[MAX][MAX], result[MAX][MAX];
+int r1, c1, r2, c2;
+
+// Structure to hold row and column info for each thread
+typedef struct {
+    int row;
+    int col;
+} Cell;
+
+void* multiply(void* arg) {
+    Cell* data = (Cell*) arg;
+    int sum = 0;
+    for (int i = 0; i < c1; i++) {
+        sum += mat1[data->row][i] * mat2[i][data->col];
+    }
+
+    int* res = malloc(sizeof(int));
+    *res = sum;
+    pthread_exit((void*) res);  // Return result
+}
+
+int main() {
+    printf("Enter rows and columns of matrix 1: ");
+    scanf("%d %d", &r1, &c1);
+    printf("Enter rows and columns of matrix 2: ");
+    scanf("%d %d", &r2, &c2);
+
+    if (c1 != r2) {
+        printf("Matrix multiplication not possible\n");
+        return 1;
+    }
+
+    printf("Enter elements of matrix 1:\n");
+    for (int i = 0; i < r1; i++)
+        for (int j = 0; j < c1; j++)
+            scanf("%d", &mat1[i][j]);
+
+    printf("Enter elements of matrix 2:\n");
+    for (int i = 0; i < r2; i++)
+        for (int j = 0; j < c2; j++)
+            scanf("%d", &mat2[i][j]);
+
+    pthread_t threads[r1 * c2];
+    int thread_index = 0;
+
+    // Create threads for each cell
+    for (int i = 0; i < r1; i++) {
+        for (int j = 0; j < c2; j++) {
+            Cell* data = (Cell*) malloc(sizeof(Cell));
+            data->row = i;
+            data->col = j;
+            pthread_create(&threads[thread_index], NULL, multiply, data);
+            thread_index++;
+        }
+    }
+
+    // Join threads and collect results
+    thread_index = 0;
+    for (int i = 0; i < r1; i++) {
+        for (int j = 0; j < c2; j++) {
+            void* ret_val;
+            pthread_join(threads[thread_index], &ret_val);
+            result[i][j] = *(int*)ret_val;
+            free(ret_val); // Free dynamically allocated memory
+            thread_index++;
+        }
+    }
+
+    // Print result matrix
+    printf("Resultant Matrix:\n");
+    for (int i = 0; i < r1; i++) {
+        for (int j = 0; j < c2; j++) {
+            printf("%d ", result[i][j]);
+        }
+        printf("\n");
+    }
+
+    return 0;
+}
+
+
+
+**************************
+**thread cycle**
+import threading
+import time
+
+# Define a thread class
+class MyThread(threading.Thread):
+    def run(self):
+        print(f"Thread {self.name} is starting.")
+        time.sleep(2)  # Simulate some work
+        print(f"Thread {self.name} is running.")
+        time.sleep(2)  # Simulate more work
+        print(f"Thread {self.name} has finished.")
+
+# Main program
+if __name__ == "__main__":
+    print("Main thread: creating a new thread.")
+
+    t = MyThread()           # Create thread object
+    t.start()                # Start the thread (calls run())
+    print("Main thread: waiting for the thread to finish.")
+
+    t.join()                 # Wait for thread to finish
+    print("Main thread: thread has completed. Exiting program.")
 
