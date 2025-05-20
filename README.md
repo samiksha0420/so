@@ -446,3 +446,145 @@ if __name__ == "__main__":
     t.join()                 # Wait for thread to finish
     print("Main thread: thread has completed. Exiting program.")
 
+
+
+************************
+**fork**
+import os
+import time
+
+def demonstrate_fork_execve_wait():
+    print(f"Parent process PID: {os.getpid()}")
+    
+    pid = os.fork()  # Create a child process
+
+    if pid == 0:
+        # Child process
+        print(f"Child process PID: {os.getpid()} (Parent PID: {os.getppid()})")
+        time.sleep(2)  # Sleep to simulate work
+        
+        # Replace child process with another program using execve
+        print("Child is replacing itself with `ls` command using execve\n")
+        os.execve("/bin/ls", ["ls", "-l"], os.environ)
+    else:
+        # Parent process
+        print("Parent is waiting for the child to complete using wait()")
+        pid, status = os.wait()
+        print(f"Child process {pid} terminated with status {status}")
+        print("Parent resumes execution.\n")
+
+def demonstrate_zombie():
+    print("\n--- Demonstrating Zombie Process ---")
+    pid = os.fork()
+    if pid == 0:
+        print(f"[Zombie] Child PID: {os.getpid()}")
+        print("[Zombie] Exiting immediately...")
+        os._exit(0)
+    else:
+        print(f"[Zombie] Parent PID: {os.getpid()}")
+        print("[Zombie] Sleeping without waiting for child (child becomes zombie)...")
+        time.sleep(10)  # Enough time to observe zombie via `ps aux` in terminal
+        os.wait()  # Cleaning up zombie after 10 seconds
+        print("[Zombie] Parent collected child. Zombie cleaned.")
+
+def demonstrate_orphan():
+    print("\n--- Demonstrating Orphan Process ---")
+    pid = os.fork()
+    if pid == 0:
+        print(f"[Orphan] Child PID: {os.getpid()} (initial parent PID: {os.getppid()})")
+        time.sleep(5)  # Wait to let parent die
+        print(f"[Orphan] Now orphan. New parent PID: {os.getppid()}")
+        print("[Orphan] Continuing execution...\n")
+        time.sleep(2)
+        print("[Orphan] Orphan process ends.")
+    else:
+        print(f"[Orphan] Parent PID: {os.getpid()} exiting...")
+        os._exit(0)  # Parent exits immediately; child becomes orphan
+
+if __name__ == "__main__":
+    demonstrate_fork_execve_wait()
+    demonstrate_zombie()
+    time.sleep(1)
+    demonstrate_orphan()
+
+
+
+***********************
+**address**
+#!/bin/bash
+
+ADDRESS_BOOK="address_book.txt"
+
+create_address_book() {
+    if [ -f "$ADDRESS_BOOK" ]; then
+        echo "Address book already exists."
+    else
+        touch "$ADDRESS_BOOK"
+        echo "Address book created."
+    fi
+}
+
+view_address_book() {
+    if [ -s "$ADDRESS_BOOK" ]; then
+        echo "------ Address Book ------"
+        cat "$ADDRESS_BOOK"
+        echo "--------------------------"
+    else
+        echo "Address book is empty."
+    fi
+}
+
+insert_record() {
+    echo "Enter Name:"
+    read name
+    echo "Enter Phone:"
+    read phone
+    echo "Enter Email:"
+    read email
+    echo "$name | $phone | $email" >> "$ADDRESS_BOOK"
+    echo "Record inserted."
+}
+
+delete_record() {
+    echo "Enter the name of the record to delete:"
+    read name
+    grep -v "^$name |" "$ADDRESS_BOOK" > temp.txt && mv temp.txt "$ADDRESS_BOOK"
+    echo "Record deleted (if it existed)."
+}
+
+modify_record() {
+    echo "Enter the name of the record to modify:"
+    read name
+    grep -v "^$name |" "$ADDRESS_BOOK" > temp.txt && mv temp.txt "$ADDRESS_BOOK"
+
+    echo "Enter new phone:"
+    read new_phone
+    echo "Enter new email:"
+    read new_email
+    echo "$name | $new_phone | $new_email" >> "$ADDRESS_BOOK"
+    echo "Record modified."
+}
+
+while true
+do
+    echo ""
+    echo "Address Book Menu:"
+    echo "a) Create Address Book"
+    echo "b) View Address Book"
+    echo "c) Insert Record"
+    echo "d) Delete Record"
+    echo "e) Modify Record"
+    echo "f) Exit"
+    echo "Enter your choice:"
+    read choice
+
+    case $choice in
+        a|A) create_address_book ;;
+        b|B) view_address_book ;;
+        c|C) insert_record ;;
+        d|D) delete_record ;;
+        e|E) modify_record ;;
+        f|F) echo "Exiting..."; break ;;
+        *) echo "Invalid choice. Please try again." ;;
+    esac
+done
