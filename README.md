@@ -203,7 +203,7 @@ if __name__ == "__main__":
 
 
 ************************
-     **rr****
+   **rr**
      class process:
     def __init__ (self, pid, at, bt):
         self.pid = pid
@@ -277,57 +277,50 @@ if __name__ == "__main__":
 
 import threading
 import time
-import random
+import random 
 
-# Shared buffer
-buffer = []
-buffer_size = 5
 
-# Semaphores
-empty_slots = threading.Semaphore(buffer_size)  # initially all slots are empty
-full_slots = threading.Semaphore(0)             # initially no filled slot
+buffer=[]
+buffer_size=5
 
-# Mutex lock
+empty = threading.Semaphore(buffer_size)
+full = threading.Semaphore(0)
+
 mutex = threading.Lock()
 
-# Producer thread function
 def producer():
     for i in range(10):
-        item = random.randint(1, 100)
-        empty_slots.acquire()         # wait if buffer is full
-        mutex.acquire()              # acquire lock to access buffer
+        item = random.randint(1,100)
+        empty.acquire()
+        mutex.acquire()
         buffer.append(item)
-        print(f"Producer produced: {item}")
-        mutex.release()              # release lock
-        full_slots.release()        # signal that a new item is available
-        time.sleep(random.random()) # simulate work
+        print(f"producer : {item}")
+        mutex.release()
+        full.release()
+        time.sleep(random.random())
 
-# Consumer thread function
 def consumer():
     for i in range(10):
-        full_slots.acquire()         # wait if buffer is empty
-        mutex.acquire()              # acquire lock
-        item = buffer.pop(0)
-        print(f"Consumer consumed: {item}")
-        mutex.release()              # release lock
-        empty_slots.release()       # signal that a slot is now empty
-        time.sleep(random.random()) # simulate work
+        full.acquire()
+        mutex.acquire()
+        item=buffer.pop(0)
+        print(f"consumer: {item}")
+        mutex.release()
+        empty.release()
+        time.sleep(random.random())
 
-# Main function
+
 if __name__ == "__main__":
-    # Create threads
-    producer_thread = threading.Thread(target=producer)
-    consumer_thread = threading.Thread(target=consumer)
+    producer_thread=threading.Thread(target=producer)
+    consumer_thread=threading.Thread(target=consumer)
 
-    # Start threads
     producer_thread.start()
     consumer_thread.start()
 
-    # Wait for threads to finish
     producer_thread.join()
     consumer_thread.join()
 
-    print("Finished Producer-Consumer simulation.")
+    print("completed")
 
 
 
